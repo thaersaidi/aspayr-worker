@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { getConsentsContainer, getTransactionsContainer } from "./cosmos";
 import { createYapilyClient, fetchAccounts, fetchTransactions } from "./yapily";
 
-type Logger = Pick<typeof console, "log" | "warn" | "error">;
+type Logger = { log: (...args: unknown[]) => void; warn: (...args: unknown[]) => void; error: (...args: unknown[]) => void };
 
 const SAFETY_DAYS = 2;
 const DEFAULT_LOOKBACK_DAYS = Number.parseInt(process.env.SYNC_LOOKBACK_DAYS || "30", 10) || 30;

@@ -15,7 +15,7 @@ app.timer("sync-transactions-timer", {
     for (const doc of resources) {
       const userId = doc.id;
       try {
-        await syncTransactionsForUser(userId, { logger: ctx.log });
+        await syncTransactionsForUser(userId, { logger: ctx });
       } catch (err: any) {
         ctx.log(`[sync-transactions-timer] Failed for user ${userId}: ${err.message}`);
       }

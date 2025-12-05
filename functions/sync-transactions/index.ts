@@ -19,7 +19,7 @@ app.http("sync-transactions", {
   methods: ["GET", "POST"],
   authLevel: "function",
   handler: async (req: HttpRequest, ctx: InvocationContext): Promise<HttpResponseInit> => {
-    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) as Record<string, unknown> : {};
     const userId = (req.query.get("userId") || body.userId)?.toString();
 
     if (!userId) {
@@ -33,7 +33,7 @@ app.http("sync-transactions", {
     const result = await syncTransactionsForUser(userId, {
       accountIds,
       lookbackDays,
-      logger: ctx.log,
+      logger: ctx,
     });
 
     return {
