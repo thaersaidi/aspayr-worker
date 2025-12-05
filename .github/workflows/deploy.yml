@@ -38,21 +38,32 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Sync app settings
+        env:
+          YAPILY_APPLICATION_UUID: ${{ secrets.YAPILY_APPLICATION_UUID }}
+          YAPILY_APPLICATION_SECRET: ${{ secrets.YAPILY_APPLICATION_SECRET }}
+          YAPILY_BASE_URL: ${{ vars.YAPILY_BASE_URL || 'https://api.yapily.com' }}
+          COSMOS_ENDPOINT: ${{ vars.COSMOS_ENDPOINT }}
+          COSMOS_KEY: ${{ secrets.COSMOS_KEY }}
+          COSMOS_DATABASE_ID: ${{ vars.COSMOS_DATABASE_ID || 'fin' }}
+          TRANSACTIONS_CONTAINER_ID: ${{ vars.TRANSACTIONS_CONTAINER_ID || 'Transactions' }}
+          CONSENTS_CONTAINER_ID: ${{ vars.CONSENTS_CONTAINER_ID || 'Consents' }}
+          SYNC_TRANSACTIONS_CRON: ${{ vars.SYNC_TRANSACTIONS_CRON || '0 0 */6 * * *' }}
+          SYNC_LOOKBACK_DAYS: ${{ vars.SYNC_LOOKBACK_DAYS || '30' }}
         run: |
           az functionapp config appsettings set \
             --name "$AZURE_FUNCTIONAPP_NAME" \
             --resource-group "$AZURE_RESOURCE_GROUP" \
             --settings \
-              YAPILY_APPLICATION_UUID=${{ secrets.YAPILY_APPLICATION_UUID }} \
-              YAPILY_APPLICATION_SECRET=${{ secrets.YAPILY_APPLICATION_SECRET }} \
-              YAPILY_BASE_URL=${{ vars.YAPILY_BASE_URL }} \
-              COSMOS_ENDPOINT=${{ vars.COSMOS_ENDPOINT }} \
-              COSMOS_KEY=${{ secrets.COSMOS_KEY }} \
-              COSMOS_DATABASE_ID=${{ vars.COSMOS_DATABASE_ID }} \
-              TRANSACTIONS_CONTAINER_ID=${{ vars.TRANSACTIONS_CONTAINER_ID }} \
-              CONSENTS_CONTAINER_ID=${{ vars.CONSENTS_CONTAINER_ID }} \
-              SYNC_TRANSACTIONS_CRON=${{ vars.SYNC_TRANSACTIONS_CRON }} \
-              SYNC_LOOKBACK_DAYS=${{ vars.SYNC_LOOKBACK_DAYS }}
+              "YAPILY_APPLICATION_UUID=$YAPILY_APPLICATION_UUID" \
+              "YAPILY_APPLICATION_SECRET=$YAPILY_APPLICATION_SECRET" \
+              "YAPILY_BASE_URL=$YAPILY_BASE_URL" \
+              "COSMOS_ENDPOINT=$COSMOS_ENDPOINT" \
+              "COSMOS_KEY=$COSMOS_KEY" \
+              "COSMOS_DATABASE_ID=$COSMOS_DATABASE_ID" \
+              "TRANSACTIONS_CONTAINER_ID=$TRANSACTIONS_CONTAINER_ID" \
+              "CONSENTS_CONTAINER_ID=$CONSENTS_CONTAINER_ID" \
+              "SYNC_TRANSACTIONS_CRON=$SYNC_TRANSACTIONS_CRON" \
+              "SYNC_LOOKBACK_DAYS=$SYNC_LOOKBACK_DAYS"
 
       - name: Install dependencies
         run: npm install
