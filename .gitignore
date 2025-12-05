@@ -1,0 +1,22 @@
+# Node / TypeScript
+node_modules/
+dist/
+.tmp/
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Local environment
+local.settings.json
+.env
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,20 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+
+    "COSMOS_ENDPOINT": "https://your-cosmos-account.documents.azure.com:443/",
+    "COSMOS_KEY": "your-cosmos-key",
+    "COSMOS_DATABASE_ID": "fin",
+    "TRANSACTIONS_CONTAINER_ID": "Transactions",
+    "CONSENTS_CONTAINER_ID": "Consents",
+
+    "YAPILY_APPLICATION_UUID": "your-yapily-app-uuid",
+    "YAPILY_APPLICATION_SECRET": "your-yapily-secret",
+    "YAPILY_BASE_URL": "https://api.yapily.com",
+
+    "SYNC_TRANSACTIONS_CRON": "0 0 */6 * * *",
+    "SYNC_LOOKBACK_DAYS": "30"
+  }
+}
