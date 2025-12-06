@@ -68,20 +68,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Install Azure Functions Core Tools
+        run: npm install -g azure-functions-core-tools@4 --unsafe-perm true
+
       - name: Build
         run: npm run build
 
-      - name: Prepare deployment package
-        run: |
-          cp host.json dist/
-          cp package.json dist/
-          cd dist && npm install --omit=dev
-
-      - name: Deploy to Azure Functions
-        uses: azure/functions-action@v1
-        with:
-          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-          package: dist
+      - name: Publish to Azure Functions
+        run: func azure functionapp publish "$AZURE_FUNCTIONAPP_NAME" --typescript --nozip
 
       - name: Logout
         if: always()
