@@ -26,6 +26,54 @@ interface SyncSummary {
   }>;
 }
 
+async function removeConsent(
+  consentsContainer: Container,
+  userId: string,
+  consentId: string,
+  logger: Logger,
+  reason?: string
+): Promise<void> {
+  try {
+    const { resource } = await consentsContainer.item(userId, userId).read<any>();
+    if (!resource) {
+      logger.warn(`[sync-transactions] Consent doc not found for user ${userId} when removing consent ${consentId}`);
+      return;
+    }
+
+    const consents = Array.isArray(resource.consents) ? resource.consents : [];
+    const nextConsents = consents.filter((c: any) => (c?.id || c?.consentId) !== consentId);
+    if (nextConsents.length === consents.length) {
+      logger.warn(
+        `[sync-transactions] Consent ${consentId} not present for user ${userId}; nothing to remove after 403/401`
+      );
+      return;
+    }
+
+    if (nextConsents.length === 0) {
+      await consentsContainer.item(userId, userId).delete();
+      logger.log(
+        `[sync-transactions] Deleted consent doc for user ${userId} after removing consent ${consentId}${
+          reason ? ` (${reason})` : ""
+        }`
+      );
+      return;
+    }
+
+    const updated = {
+      ...resource,
+      consents: nextConsents,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await consentsContainer.item(resource.id, resource.userId || resource.id).replace(updated);
+    logger.log(
+      `[sync-transactions] Removed consent ${consentId} for user ${userId}${reason ? ` (${reason})` : ""}`
+    );
+  } catch (err: any) {
+    logger.warn(`[sync-transactions] Failed to remove consent ${consentId} for user ${userId}: ${err.message}`);
+  }
+}
+
 function pickDate(candidate: any): string | null {
   const fields = [
     candidate?.bookingDateTime,
@@ -104,10 +152,31 @@ export async function syncTransactionsForUser(userId: string, options: SyncOptio
     .fetchAll();
 
   const consentsArray: any[] = consentDocs[0]?.consents || [];
-  const authorizedConsents = consentsArray.filter((c) => c?.status === "AUTHORIZED" && c?.consentToken);
+  const authorizedConsents: any[] = [];
+
+  for (const consent of consentsArray) {
+    const consentId = consent?.id || consent?.consentId || "unknown";
+    if (consent?.status !== "AUTHORIZED") {
+      await removeConsent(consentsContainer, userId, consentId, logger, `status=${consent?.status}`);
+      continue;
+    }
+    if (!consent?.consentToken) {
+      await removeConsent(consentsContainer, userId, consentId, logger, "missing consentToken");
+      continue;
+    }
+    authorizedConsents.push(consent);
+  }
 
   if (!authorizedConsents.length) {
-    logger.warn(`[sync-transactions] No authorized consents found for user ${userId}`);
+    // Delete empty/invalid consent doc if nothing remains
+    try {
+      await consentsContainer.item(userId, userId).delete();
+      logger.log(`[sync-transactions] Deleted consent doc for user ${userId} (no authorized consents)`);
+    } catch (err: any) {
+      logger.warn(
+        `[sync-transactions] No authorized consents for user ${userId}; failed to delete doc: ${err.message}`
+      );
+    }
     return { userId, accounts: [] };
   }
 
@@ -123,6 +192,10 @@ export async function syncTransactionsForUser(userId: string, options: SyncOptio
     try {
       accounts = await fetchAccounts(client, consentToken);
     } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 401 || status === 403) {
+        await removeConsent(consentsContainer, userId, consentId, logger, `status=${status}`);
+      }
       logger.error(`[sync-transactions] Failed to fetch accounts for consent ${consentId}: ${err.message}`);
       continue;
     }
@@ -140,6 +213,10 @@ export async function syncTransactionsForUser(userId: string, options: SyncOptio
       try {
         transactions = await fetchTransactions(client, accountId, consentToken, fromIso);
       } catch (err: any) {
+        const status = err?.response?.status;
+        if (status === 401 || status === 403) {
+          await removeConsent(consentsContainer, userId, consentId, logger, `status=${status}`);
+        }
         logger.error(`[sync-transactions] Failed to fetch transactions for account ${accountId}: ${err.message}`);
         continue;
       }
