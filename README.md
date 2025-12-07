@@ -23,3 +23,21 @@ Aspayr Azure Functions for background jobs.
 
 - `sync-transactions` (HTTP GET/POST): trigger a sync for a `userId`; optional `accountIds` (CSV) and `lookbackDays`.
 - `sync-transactions-timer` (Timer): scheduled sync for all users with consents; cron from `SYNC_TRANSACTIONS_CRON`.
+
+## Local testing examples (curl)
+
+- All users (runs sync across all consent docs):
+
+  ```bash
+  curl -X POST "http://localhost:7071/api/sync-transactions" \
+    -H "Content-Type: application/json" \
+    -d '{}'
+  ```
+
+- Specific user and account:
+
+  ```bash
+  curl -X POST "http://localhost:7071/api/sync-transactions" \
+    -H "Content-Type: application/json" \
+    -d "{\"userId\":\"a58d723c-cb0f-4e3f-ac01-127497909656\",\"accountIds\":[\"100004000000000000000003\"]}"
+  ```
