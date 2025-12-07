@@ -66,22 +66,19 @@ jobs:
               "SYNC_LOOKBACK_DAYS=$SYNC_LOOKBACK_DAYS"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build
         run: npm run build
 
-      - name: Prepare deployment package
-        run: |
-          cp host.json dist/
-          cp package.json dist/
-          cd dist && npm install --omit=dev
+      - name: Prune dev dependencies
+        run: npm prune --production
 
       - name: Deploy to Azure Functions
         uses: azure/functions-action@v1
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-          package: dist
+          package: .
 
       - name: Logout
         if: always()
